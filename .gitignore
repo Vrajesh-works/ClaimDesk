@@ -426,3 +426,7 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# ClaimDesk local data (SQLite dev database, evidence files)
+src/ClaimDesk.Api/data/
+data/

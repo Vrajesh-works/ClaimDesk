@@ -26,3 +26,7 @@ dotnet_diagnostic.CA1707.severity = none
 # Logging message templates are fine for this codebase size.
 dotnet_diagnostic.CA1848.severity = none
 dotnet_diagnostic.CA1873.severity = none
+
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
