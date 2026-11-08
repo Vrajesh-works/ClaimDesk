@@ -1,0 +1,28 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,html,scss,css,ts,js,mjs}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true
+csharp_style_var_for_built_in_types = true
+csharp_style_var_when_type_is_apparent = true
+dotnet_style_qualification_for_field = false
+# Test method names use underscores for readability.
+dotnet_diagnostic.CA1707.severity = none
+# Logging message templates are fine for this codebase size.
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
