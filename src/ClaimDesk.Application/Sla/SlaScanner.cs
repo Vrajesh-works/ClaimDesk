@@ -84,6 +84,10 @@ public sealed class SlaScanner(
         CreatedAt = now,
     };
 
-    private static string FormatSpan(TimeSpan span) =>
-        span.TotalDays >= 1 ? $"{span.TotalDays:0.#} days" : $"{span.TotalHours:0.#} hours";
+    private static string FormatSpan(TimeSpan span)
+    {
+        var (value, unit) = span.TotalDays >= 1 ? (span.TotalDays, "day") : (span.TotalHours, "hour");
+        var text = value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+        return text == "1" ? $"1 {unit}" : $"{text} {unit}s";
+    }
 }

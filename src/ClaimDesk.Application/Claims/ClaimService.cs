@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using ClaimDesk.Application.Abstractions;
-using ClaimDesk.Application.Uploads;
 using ClaimDesk.Application.Risk;
+using ClaimDesk.Application.Uploads;
 using ClaimDesk.Domain.Claims;
 using ClaimDesk.Domain.Common;
 using ClaimDesk.Domain.Users;
@@ -142,6 +142,10 @@ public sealed class ClaimService(
         };
 
         claim.AddEvidence(evidence, actor, Now);
+
+        // Evidence has a client-generated key, so EF would treat it as an existing row if it
+        // were only discovered through the navigation. Mark it as new explicitly.
+        db.Evidence.Add(evidence);
 
         buffer.Position = 0;
         await evidenceStore.SaveAsync(evidence.StorageKey, buffer, evidence.ContentType, ct);
