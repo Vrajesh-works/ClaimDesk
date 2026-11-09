@@ -69,7 +69,7 @@ For the MVP (verifiable today):
   passes as a Playwright end-to-end test in CI.
 - Every state change produces exactly one audit event; no API path can modify or delete one.
 - CI green on every pull request: build, format check, unit tests, integration tests (including a
-  real SQL Server via Testcontainers), Angular lint and build, E2E.
+  real SQL Server via Testcontainers), Angular strict-template build and unit tests, E2E.
 
 For a production pilot (how the product would be judged later):
 
