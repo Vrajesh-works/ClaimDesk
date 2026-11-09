@@ -2,7 +2,7 @@
 # Build context: repository root (see docker-compose.yml).
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /repo
-COPY global.json Directory.Build.props Directory.Packages.props ./
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/ClaimDesk.Domain/ClaimDesk.Domain.csproj src/ClaimDesk.Domain/
 COPY src/ClaimDesk.Application/ClaimDesk.Application.csproj src/ClaimDesk.Application/
 COPY src/ClaimDesk.Infrastructure/ClaimDesk.Infrastructure.csproj src/ClaimDesk.Infrastructure/
