@@ -177,6 +177,12 @@ build (strict templates) and unit tests, the Playwright E2E and the Compose smok
   same fix: unpacked the NSS, NSPR and ALSA `.deb`s user-level. CI uses
   `playwright install --with-deps`. `playwright.config.ts` accepts `PW_CHROMIUM_PATH` for machines
   with their own Chromium.
+- **The API image failed to build in CI even though every other build passed.** The image build
+  reported CA1848 and CA1861 analyzer errors that `dotnet build` never showed. The Dockerfile
+  copied `Directory.Build.props` (warnings as errors, latest analyzers) but not `.editorconfig`,
+  which turns those rules off for logging calls and generated migrations. Inside the image the
+  analyzers ran at full strength. Copying `.editorconfig` into the build stage fixed it. I
+  reproduced both outcomes by publishing from a copy of the exact Docker build context.
 - **The Docker CLI disappeared after a reboot, but the Docker socket stayed.** Testcontainers talks
   to the socket directly, so the SQL Server integration test kept running locally. The Compose
   smoke test runs in CI.
