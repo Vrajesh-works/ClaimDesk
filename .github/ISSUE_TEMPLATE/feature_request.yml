@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an improvement to ClaimDesk
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who needs this and what is hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: role
+    attributes:
+      label: Affected role
+      multiple: true
+      options: [Claimant, Adjuster, Admin]

@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  backend:
+    name: .NET build, lint, unit + integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet restore ClaimDesk.sln
+      - name: Lint (dotnet format)
+        run: dotnet format ClaimDesk.sln --verify-no-changes --no-restore
+      - name: Build (warnings are errors)
+        run: dotnet build ClaimDesk.sln --no-restore -c Release
+      - name: Unit tests
+        run: dotnet test tests/ClaimDesk.UnitTests --no-build -c Release --logger trx --results-directory TestResults
+      - name: Integration tests (includes SQL Server via Testcontainers)
+        run: dotnet test tests/ClaimDesk.IntegrationTests --no-build -c Release --logger trx --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dotnet-test-results
+          path: TestResults
+
+  web:
+    name: Angular build + unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Build (strict templates)
+        run: npm run build
+      - name: Unit tests (headless Chrome)
+        run: npm run test:ci
+
+  e2e:
+    name: Playwright lifecycle E2E
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: dotnet build src/ClaimDesk.Api
+      - run: npm ci --no-audit --no-fund
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - run: npx playwright test
+        working-directory: web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+
+  compose-smoke:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the stack
+        run: docker compose up -d --build --wait --wait-timeout 300
+      - name: API is ready through the web proxy
+        run: curl -fsS http://localhost:8080/health/ready | grep Healthy
+      - name: Demo login and risk queue work end to end
+        run: |
+          token=$(curl -fsS -X POST http://localhost:8080/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"adjuster@claimdesk.local","password":"ClaimDesk!2026"}' | jq -r .accessToken)
+          count=$(curl -fsS http://localhost:8080/api/queue -H "Authorization: Bearer $token" | jq length)
+          echo "queue size: $count"
+          test "$count" -gt 0
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - if: always()
+        run: docker compose down -v
